@@ -13,8 +13,8 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
-      {/* Increased padding-top to 24 (pt-24) to ensure more space below the navbar */}
-      <div className="p-4 md:p-8 pt-24">
+      {/* Increased padding-top to 32 (pt-32) to ensure more space below the navbar */}
+      <div className="p-4 md:p-8 pt-32">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
