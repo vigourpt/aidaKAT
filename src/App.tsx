@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Download, ArrowRight, Search, Sparkles, Settings, HelpCircle } from 'lucide-react';
+import Navigation from './components/Navigation';
 import KeywordInput from './components/KeywordInput';
 import AidaResults from './components/AidaResults';
 import BridgeGenerator from './components/BridgeGenerator';
@@ -78,7 +79,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8 pt-24">
         <header className="text-center mb-12 relative">
           <div className="absolute right-0 top-0 flex gap-2">
             <button
