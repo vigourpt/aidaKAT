@@ -11,7 +11,7 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
+    <nav className="fixed w-full top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0">
@@ -35,8 +35,8 @@ const Navigation = () => {
         </div>
 
         {/* Dropdown menu */}
-        <div className={`${isMenuOpen ? 'block' : 'hidden'} bg-white border-t border-gray-100`}>
-          <div className="px-2 pt-2 pb-3 space-y-1">
+        <div className={`${isMenuOpen ? 'block' : 'hidden'} bg-white rounded-lg shadow-lg mt-2`}>
+          <div className="px-2 py-3 space-y-1">
             {links.map((link) => (
               <a
                 key={link.href}
