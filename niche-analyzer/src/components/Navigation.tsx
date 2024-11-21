@@ -20,24 +20,22 @@ const Navigation = () => {
             </a>
           </div>
 
-          {/* Menu button - now shown at all screen sizes */}
-          <div>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
-              aria-expanded="false"
-            >
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" />
-              ) : (
-                <Menu className="block h-6 w-6" />
-              )}
-            </button>
-          </div>
+          {/* Menu button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
+            aria-expanded="false"
+          >
+            {isMenuOpen ? (
+              <X className="block h-6 w-6" />
+            ) : (
+              <Menu className="block h-6 w-6" />
+            )}
+          </button>
         </div>
 
-        {/* Menu - shown when open, hidden when closed */}
-        <div className={`${isMenuOpen ? 'block' : 'hidden'}`}>
+        {/* Dropdown menu */}
+        <div className={`${isMenuOpen ? 'block' : 'hidden'} bg-white border-t border-gray-100`}>
           <div className="px-2 pt-2 pb-3 space-y-1">
             {links.map((link) => (
               <a
