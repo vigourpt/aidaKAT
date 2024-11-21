@@ -13,7 +13,8 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
-      <div className="p-4 md:p-8 pt-24">
+      {/* Added pt-20 to ensure content starts below the fixed navbar */}
+      <div className="p-4 md:p-8 pt-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
