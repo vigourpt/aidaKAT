@@ -1,26 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { SettingsPanel } from './components/Settings';
+import React, { useState } from 'react';
+import { SettingsTab } from '../../src/components/SettingsTab';
 import { NicheAnalyzer } from './components/NicheAnalyzer';
 import Navigation from './components/Navigation';
-import type { Settings, NicheData } from './types';
+import type { NicheData } from './types';
+import { loadSettings } from '../../src/utils/storage';
 
 export default function App() {
-  const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem('settings');
-    return saved ? JSON.parse(saved) : {
-      apiKey: '',
-      apiType: 'openrouter',
-      model: 'anthropic/claude-3-opus'
-    };
-  });
-
   const [result, setResult] = useState<NicheData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem('settings', JSON.stringify(settings));
-  }, [settings]);
 
   const parseAIResponse = (content: string): NicheData => {
     try {
@@ -35,8 +23,11 @@ export default function App() {
   };
 
   const analyzeNiche = async (niche: string) => {
-    if (!settings.apiKey) {
-      setError('Please set your API key in settings first');
+    const settings = loadSettings();
+    const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+    
+    if (!apiKey) {
+      setError(`Please set your ${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key in settings first`);
       return;
     }
 
@@ -45,15 +36,15 @@ export default function App() {
 
     try {
       let response;
-      if (settings.apiType === 'openai') {
+      if (settings.activeApiType === 'openai') {
         response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${settings.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: settings.model,
+            model: settings.preferredModel,
             messages: [{
               role: 'user',
               content: `Analyze this niche market: "${niche}". Focus on beginner-friendly opportunities with low competition. If the niche is too competitive, suggest 3 closely related but easier alternatives. Return ONLY a JSON object with this structure:
@@ -101,12 +92,12 @@ export default function App() {
         response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${settings.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': window.location.href,
           },
           body: JSON.stringify({
-            model: settings.model,
+            model: settings.preferredModel,
             messages: [{
               role: 'user',
               content: `Analyze this niche market: "${niche}". Focus on beginner-friendly opportunities with low competition. If the niche is too competitive, suggest 3 closely related but easier alternatives. Return ONLY a JSON object with this structure:
@@ -166,10 +157,14 @@ export default function App() {
     }
   };
 
+  const handleSettingsChange = () => {
+    // Refresh the page or update state if needed when settings change
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <SettingsPanel settings={settings} onSave={setSettings} />
+      <SettingsTab onSettingsChange={handleSettingsChange} />
       
       <main className="container mx-auto py-8 pt-24">
         <div className="text-center mb-8">

@@ -30,7 +30,14 @@ export interface BridgeResult {
 
 export interface ApiKeys {
   openai: string;
+  openRouter: string;
   keywordsEverywhere: string;
+}
+
+export interface Settings {
+  apiKeys: ApiKeys;
+  preferredModel: string;
+  activeApiType: 'openai' | 'openrouter';
 }
 
 export interface StageCardProps {

@@ -35,9 +35,3 @@ export interface NicheData {
   tools: Tool[];
   alternatives: NicheAlternative[];
 }
-
-export interface Settings {
-  apiKey: string;
-  apiType?: 'openrouter' | 'openai';
-  model: string;
-}

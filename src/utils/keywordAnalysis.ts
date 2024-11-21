@@ -1,20 +1,30 @@
-import { loadApiKeys } from './storage';
+import { loadSettings } from './storage';
 import OpenAI from 'openai';
 import type { AidaStageResults, BridgeResult, KeywordMetrics } from '../types';
 
 const getOpenAIClient = () => {
-  const { openai: apiKey } = loadApiKeys();
+  const settings = loadSettings();
+  const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+  
   if (!apiKey) {
-    throw new Error('OpenAI API key is not configured. Please add it in the settings.');
+    throw new Error(`${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key is not configured. Please add it in the settings.`);
   }
-  return new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+  
+  return new OpenAI({ 
+    apiKey, 
+    dangerouslyAllowBrowser: true,
+    baseURL: settings.activeApiType === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined
+  });
 };
 
 const getKeywordsEverywhereHeaders = () => {
-  const { keywordsEverywhere: apiKey } = loadApiKeys();
+  const settings = loadSettings();
+  const apiKey = settings.apiKeys.keywordsEverywhere;
+  
   if (!apiKey) {
     throw new Error('Keywords Everywhere API key is not configured. Please add it in the settings.');
   }
+  
   return {
     'Authorization': `Bearer ${apiKey}`,
     'Accept': 'application/json',
@@ -66,8 +76,10 @@ async function batchProcessKeywords(keywords: string[]): Promise<KeywordMetrics[
 
 async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: string[] }> {
   const openai = getOpenAIClient();
+  const settings = loadSettings();
+  
   const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: settings.preferredModel,
     messages: [
       {
         role: "system",
@@ -144,8 +156,10 @@ export const generateBridge = async (
   }
 
   const openai = getOpenAIClient();
+  const settings = loadSettings();
+  
   const completion = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: settings.preferredModel,
     messages: [
       {
         role: "system",

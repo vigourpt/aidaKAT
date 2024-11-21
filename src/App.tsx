@@ -4,19 +4,23 @@ import Navigation from './components/Navigation';
 import KeywordInput from './components/KeywordInput';
 import AidaResults from './components/AidaResults';
 import BridgeGenerator from './components/BridgeGenerator';
-import SettingsTab from './components/SettingsTab';
+import { SettingsTab } from './components/SettingsTab';
 import InstructionsModal from './components/InstructionsModal';
 import { analyzeKeyword, generateBridge } from './utils/keywordAnalysis';
-import type { AidaStageResults, BridgeResult } from './types';
+import type { AidaStageResults, BridgeResult, Settings as SettingsType } from './types';
 
 function App() {
   const [aidaResults, setAidaResults] = useState<AidaStageResults | null>(null);
   const [bridgeResults, setBridgeResults] = useState<BridgeResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingBridge, setIsGeneratingBridge] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSettingsChange = (newSettings: SettingsType) => {
+    // Handle settings change if needed
+    console.log('Settings updated:', newSettings);
+  };
 
   const handleAnalyze = async (keyword: string) => {
     setError(null);
@@ -90,13 +94,6 @@ function App() {
             >
               <HelpCircle className="w-6 h-6 text-gray-600" />
             </button>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-              aria-label="Open Settings"
-            >
-              <Settings className="w-6 h-6 text-gray-600" />
-            </button>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             AIDA Keyword Analysis Tool
@@ -159,7 +156,7 @@ function App() {
           </section>
         </div>
       </div>
-      <SettingsTab isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsTab onSettingsChange={handleSettingsChange} />
       <InstructionsModal isOpen={isInstructionsOpen} onClose={() => setIsInstructionsOpen(false)} />
     </div>
   );
