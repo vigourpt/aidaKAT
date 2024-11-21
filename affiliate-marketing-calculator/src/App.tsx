@@ -54,7 +54,11 @@ function App() {
         </div>
       </div>
 
-      <SettingsTab onSettingsChange={handleSettingsChange} />
+      <SettingsTab 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsChange={handleSettingsChange}
+      />
     </div>
   );
 }

@@ -157,7 +157,11 @@ function App() {
           </section>
         </div>
       </div>
-      <SettingsTab onSettingsChange={handleSettingsChange} />
+      <SettingsTab 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsChange={handleSettingsChange}
+      />
       <InstructionsModal isOpen={isInstructionsOpen} onClose={() => setIsInstructionsOpen(false)} />
     </div>
   );

@@ -184,7 +184,11 @@ export default function App() {
         />
       </main>
 
-      <SettingsTab onSettingsChange={handleSettingsChange} />
+      <SettingsTab 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsChange={handleSettingsChange}
+      />
     </div>
   );
 }
