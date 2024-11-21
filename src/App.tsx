@@ -15,6 +15,7 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingBridge, setIsGeneratingBridge] = useState(false);
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSettingsChange = (newSettings: SettingsType) => {
@@ -93,6 +94,13 @@ function App() {
               aria-label="Open Instructions"
             >
               <HelpCircle className="w-6 h-6 text-gray-600" />
+            </button>
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+              aria-label="Open Settings"
+            >
+              <Settings className="w-6 h-6 text-gray-600" />
             </button>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">

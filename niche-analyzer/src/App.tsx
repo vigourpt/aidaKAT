@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Settings, HelpCircle } from 'lucide-react';
 import { SettingsTab } from '../../src/components/SettingsTab';
 import { NicheAnalyzer } from './components/NicheAnalyzer';
 import Navigation from './components/Navigation';
@@ -9,6 +10,7 @@ export default function App() {
   const [result, setResult] = useState<NicheData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const parseAIResponse = (content: string): NicheData => {
     try {
@@ -164,10 +166,18 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <SettingsTab onSettingsChange={handleSettingsChange} />
       
       <main className="container mx-auto py-8 pt-24">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative">
+          <div className="absolute right-0 top-0 flex gap-2">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+              aria-label="Open Settings"
+            >
+              <Settings className="w-6 h-6 text-gray-600" />
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Beginner-Friendly Niche Analyzer
           </h1>
@@ -183,6 +193,8 @@ export default function App() {
           error={error}
         />
       </main>
+
+      <SettingsTab onSettingsChange={handleSettingsChange} />
     </div>
   );
 }
