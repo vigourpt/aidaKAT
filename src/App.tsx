@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ArrowRight, Search, Sparkles, Settings, HelpCircle } from 'lucide-react';
+import { Download, ArrowRight, Search, Sparkles, HelpCircle } from 'lucide-react';
 import Navigation from './components/Navigation';
 import KeywordInput from './components/KeywordInput';
 import AidaResults from './components/AidaResults';
@@ -84,7 +84,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
-      <Navigation />
+      <Navigation onOpenSettings={() => setIsSettingsOpen(true)} />
       <div className="container mx-auto px-4 py-8 pt-24">
         <header className="text-center mb-12 relative">
           <div className="absolute right-0 top-0 flex gap-2">
@@ -94,13 +94,6 @@ function App() {
               aria-label="Open Instructions"
             >
               <HelpCircle className="w-6 h-6 text-gray-600" />
-            </button>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-              aria-label="Open Settings"
-            >
-              <Settings className="w-6 h-6 text-gray-600" />
             </button>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">

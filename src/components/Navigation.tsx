@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
-const Navigation = () => {
+interface NavigationProps {
+  onOpenSettings?: () => void;
+}
+
+const Navigation = ({ onOpenSettings }: NavigationProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const links = [
@@ -46,6 +50,17 @@ const Navigation = () => {
                 {link.text}
               </a>
             ))}
+            <button
+              onClick={() => {
+                if (onOpenSettings) {
+                  onOpenSettings();
+                  setIsMenuOpen(false);
+                }
+              }}
+              className="w-full text-left text-gray-600 hover:text-indigo-600 hover:bg-gray-100 px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Settings
+            </button>
           </div>
         </div>
       </div>

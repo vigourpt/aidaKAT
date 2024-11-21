@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, HelpCircle } from 'lucide-react';
 import { SettingsTab } from '../../src/components/SettingsTab';
 import { NicheAnalyzer } from './components/NicheAnalyzer';
-import Navigation from './components/Navigation';
+import Navigation from '../../src/components/Navigation';
 import type { NicheData } from './types';
 import { loadSettings } from '../../src/utils/storage';
 
@@ -165,19 +164,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
+      <Navigation onOpenSettings={() => setIsSettingsOpen(true)} />
       
       <main className="container mx-auto py-8 pt-24">
-        <div className="text-center mb-8 relative">
-          <div className="absolute right-0 top-0 flex gap-2">
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-              aria-label="Open Settings"
-            >
-              <Settings className="w-6 h-6 text-gray-600" />
-            </button>
-          </div>
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Beginner-Friendly Niche Analyzer
           </h1>

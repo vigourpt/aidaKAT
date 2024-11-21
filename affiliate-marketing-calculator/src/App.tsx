@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Calculator as CalculatorIcon, Settings } from 'lucide-react';
+import { Calculator as CalculatorIcon } from 'lucide-react';
 import { Formula } from './types/formula';
 import { formulas } from './data/formulas';
 import { FormulaButton } from './components/FormulaButton';
 import { Calculator } from './components/Calculator';
 import { MetricsGuide } from './components/MetricsGuide';
-import Navigation from './components/Navigation';
+import Navigation from '../../src/components/Navigation';
 import { SettingsTab } from '../../src/components/SettingsTab';
 import type { Settings as SettingsType } from '../../src/types';
 
@@ -20,20 +20,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Navigation />
+      <Navigation onOpenSettings={() => setIsSettingsOpen(true)} />
       {/* Increased padding-top to 32 (pt-32) to ensure more space below the navbar */}
       <div className="p-4 md:p-8 pt-32">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8 relative">
-            <div className="absolute right-0 top-0 flex gap-2">
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-                aria-label="Open Settings"
-              >
-                <Settings className="w-6 h-6 text-gray-600" />
-              </button>
-            </div>
+          <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
               <CalculatorIcon className="inline-block mr-2 mb-1" />
               Affiliate Marketing Calculator
