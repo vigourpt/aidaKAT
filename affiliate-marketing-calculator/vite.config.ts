@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/affiliate-marketing-calculator/',
+  base: '',
   build: {
-    outDir: 'dist',
+    outDir: '../dist/affiliate-marketing-calculator',
     emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {

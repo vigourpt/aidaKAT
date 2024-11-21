@@ -16,14 +16,18 @@ execSync('vite build', { stdio: 'inherit' });
 // Build niche analyzer
 console.log('\nBuilding niche analyzer...');
 process.chdir('niche-analyzer');
-execSync('vite build --outDir ../dist/niche-analyzer', { stdio: 'inherit' });
+execSync('vite build', { stdio: 'inherit' });
 process.chdir('..');
 
 // Build affiliate marketing calculator
 console.log('\nBuilding affiliate marketing calculator...');
 process.chdir('affiliate-marketing-calculator');
-execSync('vite build --outDir ../dist/affiliate-marketing-calculator', { stdio: 'inherit' });
+execSync('vite build', { stdio: 'inherit' });
 process.chdir('..');
+
+// Copy 404 page to dist
+console.log('\nCopying 404 page...');
+fs.copyFileSync('public/404.html', 'dist/404.html');
 
 // Create _headers file for Netlify
 console.log('\nCreating _headers file...');

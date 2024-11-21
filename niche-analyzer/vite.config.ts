@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/niche-analyzer/',
+  base: '',
   build: {
-    outDir: 'dist',
+    outDir: '../dist/niche-analyzer',
     emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {
