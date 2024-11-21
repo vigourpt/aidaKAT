@@ -20,8 +20,8 @@ const Navigation = () => {
             </a>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Menu button - now shown at all screen sizes */}
+          <div>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none"
@@ -34,23 +34,10 @@ const Navigation = () => {
               )}
             </button>
           </div>
-
-          {/* Desktop menu */}
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            {links.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                {link.text}
-              </a>
-            ))}
-          </div>
         </div>
 
-        {/* Mobile menu */}
-        <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
+        {/* Menu - shown when open, hidden when closed */}
+        <div className={`${isMenuOpen ? 'block' : 'hidden'}`}>
           <div className="px-2 pt-2 pb-3 space-y-1">
             {links.map((link) => (
               <a
