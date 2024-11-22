@@ -132,34 +132,43 @@ export function SettingsTab({ isOpen, onClose, onSettingsChange }: SettingsTabPr
             >
               {settings.activeApiType === 'openai' ? (
                 <>
-                  <option value="gpt-4-0125-preview">GPT-4 Turbo</option>
-                  <option value="gpt-4">GPT-4</option>
+                  <option value="chatgpt-4o-latest">GPT-4o Latest</option>
+                  <option value="gpt-4o-mini-2024-07-18">GPT-4o Mini (July 2024)</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini</option>
                   <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4o-2024-11-20">GPT-4o (Nov 2024)</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="gpt-4o:extended">GPT-4o Extended</option>
                 </>
               ) : (
                 <>
                   {/* Free Models */}
-                  <option value="qwen/qwen-2-7b-instruct">Qwen 2.7B (Free)</option>
-                  <option value="google/gemma-2-9b-it">Gemma 2.9B (Free)</option>
-                  <option value="meta-llama/llama-3.2-3b-instruct">Llama 3.2 3B (Free)</option>
-                  
+                  <optgroup label="Free Models">
+                    <option value="qwen/qwen-2-7b-instruct">Qwen 2.7B</option>
+                    <option value="google/gemma-2-9b-it">Gemma 2.9B</option>
+                    <option value="meta-llama/llama-3.2-3b-instruct">Llama 3.2 3B</option>
+                  </optgroup>
+
                   {/* Google Models */}
-                  <option value="google/gemini-flash-1.5-exp">Gemini Flash 1.5</option>
-                  <option value="google/gemini-pro-1.5-exp">Gemini Pro 1.5</option>
-                  
+                  <optgroup label="Google Models">
+                    <option value="google/gemini-flash-1.5-exp">Gemini Flash 1.5</option>
+                    <option value="google/gemini-pro-1.5-exp">Gemini Pro 1.5</option>
+                  </optgroup>
+
                   {/* OpenAI Models */}
-                  <option value="openai/chatgpt-4o-latest">GPT-4o Latest</option>
-                  <option value="openai/gpt-4o-mini-2024-07-18">GPT-4o Mini (July 2024)</option>
-                  <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-                  <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  <option value="openai/gpt-4o-2024-11-20">GPT-4o (Nov 2024)</option>
-                  <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="openai/gpt-4o:extended">GPT-4o Extended</option>
-                  
+                  <optgroup label="OpenAI Models">
+                    <option value="openai/gpt-4-0125-preview">GPT-4 Turbo</option>
+                    <option value="openai/gpt-4-1106-preview">GPT-4o</option>
+                    <option value="openai/gpt-4">GPT-4</option>
+                    <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  </optgroup>
+
                   {/* Anthropic Models */}
-                  <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
-                  <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                  <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+                  <optgroup label="Anthropic Models">
+                    <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                    <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
+                  </optgroup>
                 </>
               )}
             </select>
