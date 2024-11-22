@@ -134,11 +134,11 @@ export function SettingsTab({ isOpen, onClose, onSettingsChange }: SettingsTabPr
                 <>
                   <option value="gpt-4o">GPT-4 Turbo</option>
                   <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-4-1106-preview">GPT-4o</option>
+                  <option value="gpt-4o-mini">GPT-4o-mini</option>
                 </>
               ) : (
                 <>
-                  <option value="openai/gpt-4o">GPT-4o - OpenAI</option>
+                  <option value="openai/gpt-4o-mini">GPT-4o-mini - OpenAI</option>
                   <option value="openai/gpt-4-0125-preview">GPT-4 Turbo - OpenAI</option>
                   <option value="openai/gpt-4">GPT-4 - OpenAI</option>
                   <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet - Anthropic</option>
