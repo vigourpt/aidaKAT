@@ -77,7 +77,16 @@ async function batchProcessKeywords(keywords: string[]): Promise<KeywordMetrics[
 async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: string[] }> {
   const openai = getOpenAIClient();
   const settings = loadSettings();
-  
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (settings.activeApiType === 'openrouter') {
+    headers['HTTP-Referer'] = window.location.href;
+    headers['X-Title'] = 'ImVigour AIDA Analysis';
+  }
+
   const completion = await openai.chat.completions.create({
     model: settings.preferredModel,
     messages: [
@@ -109,6 +118,7 @@ async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: s
   try {
     return JSON.parse(response);
   } catch (error) {
+    console.error('Error parsing AI response:', error);
     throw new Error('Failed to parse AI response');
   }
 }
@@ -157,7 +167,16 @@ export const generateBridge = async (
 
   const openai = getOpenAIClient();
   const settings = loadSettings();
-  
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (settings.activeApiType === 'openrouter') {
+    headers['HTTP-Referer'] = window.location.href;
+    headers['X-Title'] = 'ImVigour Content Bridge';
+  }
+
   const completion = await openai.chat.completions.create({
     model: settings.preferredModel,
     messages: [
@@ -193,6 +212,7 @@ export const generateBridge = async (
       transitions: bridgePlan.transitions
     };
   } catch (error) {
+    console.error('Error parsing AI response:', error);
     throw new Error('Failed to parse AI response');
   }
 };

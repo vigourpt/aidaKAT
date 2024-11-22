@@ -14,13 +14,22 @@ export default function App() {
 
   const parseAIResponse = (content: string): Omit<NicheData, 'keywords'> & { keywords: string[] } => {
     try {
-      return JSON.parse(content);
-    } catch (e) {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      if (typeof content === 'string') {
+        // Try to find a JSON object in the response
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          // Ensure the response has the required structure
+          if (!parsed.keywords || !Array.isArray(parsed.keywords)) {
+            throw new Error('Invalid response format: missing keywords array');
+          }
+          return parsed;
+        }
       }
-      throw new Error('Could not parse AI response as JSON');
+      throw new Error('Could not find valid JSON in response');
+    } catch (e) {
+      console.error('Error parsing AI response:', e);
+      throw new Error('Failed to parse AI response. Please try again.');
     }
   };
 
@@ -84,13 +93,15 @@ export default function App() {
   ]
 }`;
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
       if (settings.activeApiType === 'openai') {
+        headers['Authorization'] = `Bearer ${aiApiKey}`;
         response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${aiApiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             model: settings.preferredModel,
             messages: [{
@@ -100,14 +111,12 @@ export default function App() {
           })
         });
       } else {
+        headers['Authorization'] = `Bearer ${aiApiKey}`;
+        headers['HTTP-Referer'] = window.location.href;
+        headers['X-Title'] = 'ImVigour Niche Analyzer';
         response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${aiApiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.href,
-            'X-Title': 'ImVigour Niche Analyzer',
-          },
+          headers,
           body: JSON.stringify({
             model: settings.preferredModel,
             messages: [{
@@ -119,19 +128,20 @@ export default function App() {
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to analyze niche');
+        const errorData = await response.json().catch(() => null);
+        console.error('API Error:', errorData);
+        throw new Error(errorData?.error?.message || `Failed to analyze niche (${response.status})`);
       }
 
       const data = await response.json();
       console.log('AI Response:', data); // Debug log
 
-      // Handle different response formats
+      // Extract content from response
       let content;
       if (settings.activeApiType === 'openai') {
-        content = data.choices[0].message.content;
+        content = data.choices?.[0]?.message?.content;
       } else {
-        content = data.choices[0].message.content;
+        content = data.choices?.[0]?.message?.content;
       }
 
       if (!content) {
