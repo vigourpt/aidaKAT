@@ -1,6 +1,13 @@
 import { loadSettings } from './storage';
 import type { AidaStageResults, BridgeResult, KeywordMetrics } from '../types';
 
+interface AidaKeywords {
+  awareness: string[];
+  interest: string[];
+  desire: string[];
+  action: string[];
+}
+
 const getKeywordsEverywhereHeaders = () => {
   const settings = loadSettings();
   const apiKey = settings.apiKeys.keywordsEverywhere;
@@ -58,7 +65,7 @@ async function batchProcessKeywords(keywords: string[]): Promise<KeywordMetrics[
   return results;
 }
 
-async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: string[] }> {
+async function makeAIRequest(prompt: string): Promise<string> {
   const settings = loadSettings();
   const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
   
@@ -69,6 +76,15 @@ async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: s
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`,
+  };
+
+  const requestBody = {
+    messages: [{
+      role: 'user',
+      content: prompt
+    }],
+    temperature: 0.7,
+    max_tokens: 2000
   };
 
   if (settings.activeApiType === 'openrouter') {
@@ -82,25 +98,8 @@ async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: s
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: settings.preferredModel,
-        messages: [
-          {
-            role: "system",
-            content: "You are a keyword research expert. Generate 50 highly relevant keywords for each AIDA stage based on the main keyword. Return only a JSON object with no additional text."
-          },
-          {
-            role: "user",
-            content: `Generate 50 keywords for each AIDA stage based on: "${keyword}".
-            
-            Format the response as a JSON object with these keys:
-            - awareness: Array of informational and problem-awareness keywords
-            - interest: Array of research and comparison keywords
-            - desire: Array of product/solution specific keywords
-            - action: Array of purchase and conversion keywords
-            
-            Each array should contain exactly 50 keywords.`
-          }
-        ]
+        ...requestBody,
+        model: settings.preferredModel
       })
     }
   );
@@ -118,12 +117,7 @@ async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: s
     throw new Error('No content in AI response');
   }
 
-  try {
-    return JSON.parse(content);
-  } catch (error) {
-    console.error('Error parsing AI response:', error);
-    throw new Error('Failed to parse AI response');
-  }
+  return content;
 }
 
 export const analyzeKeyword = async (keyword: string): Promise<AidaStageResults> => {
@@ -132,7 +126,25 @@ export const analyzeKeyword = async (keyword: string): Promise<AidaStageResults>
   }
 
   // Generate keywords for each AIDA stage
-  const aidaKeywords = await generateAIDAKeywords(keyword);
+  const prompt = `Generate 50 keywords for each AIDA stage based on: "${keyword}".
+  
+  Format the response as a JSON object with these keys:
+  - awareness: Array of informational and problem-awareness keywords
+  - interest: Array of research and comparison keywords
+  - desire: Array of product/solution specific keywords
+  - action: Array of purchase and conversion keywords
+  
+  Each array should contain exactly 50 keywords.`;
+
+  const content = await makeAIRequest(prompt);
+
+  let aidaKeywords: AidaKeywords;
+  try {
+    aidaKeywords = JSON.parse(content) as AidaKeywords;
+  } catch (error) {
+    console.error('Error parsing AI response:', error);
+    throw new Error('Failed to parse AI response');
+  }
   
   // Get metrics for all keywords in batches
   const allKeywords = Object.values(aidaKeywords).flat();
@@ -143,16 +155,16 @@ export const analyzeKeyword = async (keyword: string): Promise<AidaStageResults>
   
   // Combine keywords with their metrics
   const results: AidaStageResults = {
-    awareness: aidaKeywords.awareness.map(kw => ({
+    awareness: aidaKeywords.awareness.map((kw: string) => ({
       ...metricsMap.get(kw) || { keyword: kw, volume: 0, cpc: 0, competition: 0 }
     })),
-    interest: aidaKeywords.interest.map(kw => ({
+    interest: aidaKeywords.interest.map((kw: string) => ({
       ...metricsMap.get(kw) || { keyword: kw, volume: 0, cpc: 0, competition: 0 }
     })),
-    desire: aidaKeywords.desire.map(kw => ({
+    desire: aidaKeywords.desire.map((kw: string) => ({
       ...metricsMap.get(kw) || { keyword: kw, volume: 0, cpc: 0, competition: 0 }
     })),
-    action: aidaKeywords.action.map(kw => ({
+    action: aidaKeywords.action.map((kw: string) => ({
       ...metricsMap.get(kw) || { keyword: kw, volume: 0, cpc: 0, competition: 0 }
     }))
   };
@@ -168,64 +180,17 @@ export const generateBridge = async (
     throw new Error('Please enter both start and end keywords');
   }
 
-  const settings = loadSettings();
-  const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
-  
-  if (!apiKey) {
-    throw new Error(`${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key is not configured. Please add it in the settings.`);
-  }
+  const prompt = `Create a content bridge plan from "${start}" to "${end}" that shows how to naturally transition between these topics in a single piece of content.
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`,
-  };
+  Format the response as a JSON object with:
+  - path: Array of subtopics creating a logical flow
+  - transitions: Array of objects containing:
+    - from: starting subtopic
+    - to: ending subtopic
+    - connection: description of how these topics connect
+    - transitionText: suggested transition sentence`;
 
-  if (settings.activeApiType === 'openrouter') {
-    headers['HTTP-Referer'] = window.location.href;
-    headers['X-Title'] = 'ImVigour Content Bridge';
-  }
-
-  const response = await fetch(
-    settings.activeApiType === 'openrouter' ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions',
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: settings.preferredModel,
-        messages: [
-          {
-            role: "system",
-            content: "You are a content strategy expert. Create a detailed content bridge plan that shows how to naturally transition from one topic to another in a single piece of content. Return only a JSON object with no additional text."
-          },
-          {
-            role: "user",
-            content: `Create a content bridge plan from "${start}" to "${end}" that shows how to naturally transition between these topics in a single piece of content.
-
-            Format the response as a JSON object with:
-            - path: Array of subtopics creating a logical flow
-            - transitions: Array of objects containing:
-              - from: starting subtopic
-              - to: ending subtopic
-              - connection: description of how these topics connect
-              - transitionText: suggested transition sentence`
-          }
-        ]
-      })
-    }
-  );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    console.error('AI API Error:', errorData);
-    throw new Error(errorData?.error?.message || `API request failed (${response.status})`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error('No content in AI response');
-  }
+  const content = await makeAIRequest(prompt);
 
   try {
     const bridgePlan = JSON.parse(content);

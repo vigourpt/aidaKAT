@@ -97,17 +97,23 @@ export default function App() {
         'Content-Type': 'application/json',
       };
 
+      const requestBody = {
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        temperature: 0.7
+      };
+
       if (settings.activeApiType === 'openai') {
         headers['Authorization'] = `Bearer ${aiApiKey}`;
         response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers,
           body: JSON.stringify({
+            ...requestBody,
             model: settings.preferredModel,
-            messages: [{
-              role: 'user',
-              content: prompt
-            }]
+            max_tokens: 2000
           })
         });
       } else {
@@ -118,11 +124,9 @@ export default function App() {
           method: 'POST',
           headers,
           body: JSON.stringify({
+            ...requestBody,
             model: settings.preferredModel,
-            messages: [{
-              role: 'user',
-              content: prompt
-            }]
+            max_tokens: 2000
           })
         });
       }
@@ -170,6 +174,7 @@ export default function App() {
 
   const handleSettingsChange = () => {
     // Refresh the page or update state if needed when settings change
+    window.location.reload();
   };
 
   return (
