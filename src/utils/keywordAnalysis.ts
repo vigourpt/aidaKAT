@@ -1,21 +1,5 @@
 import { loadSettings } from './storage';
-import OpenAI from 'openai';
 import type { AidaStageResults, BridgeResult, KeywordMetrics } from '../types';
-
-const getOpenAIClient = () => {
-  const settings = loadSettings();
-  const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
-  
-  if (!apiKey) {
-    throw new Error(`${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key is not configured. Please add it in the settings.`);
-  }
-  
-  return new OpenAI({ 
-    apiKey, 
-    dangerouslyAllowBrowser: true,
-    baseURL: settings.activeApiType === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined
-  });
-};
 
 const getKeywordsEverywhereHeaders = () => {
   const settings = loadSettings();
@@ -75,11 +59,16 @@ async function batchProcessKeywords(keywords: string[]): Promise<KeywordMetrics[
 }
 
 async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: string[] }> {
-  const openai = getOpenAIClient();
   const settings = loadSettings();
+  const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+  
+  if (!apiKey) {
+    throw new Error(`${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key is not configured. Please add it in the settings.`);
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
   };
 
   if (settings.activeApiType === 'openrouter') {
@@ -87,36 +76,50 @@ async function generateAIDAKeywords(keyword: string): Promise<{ [key: string]: s
     headers['X-Title'] = 'ImVigour AIDA Analysis';
   }
 
-  const completion = await openai.chat.completions.create({
-    model: settings.preferredModel,
-    messages: [
-      {
-        role: "system",
-        content: "You are a keyword research expert. Generate 50 highly relevant keywords for each AIDA stage based on the main keyword. Return only a JSON object with no additional text."
-      },
-      {
-        role: "user",
-        content: `Generate 50 keywords for each AIDA stage based on: "${keyword}".
-        
-        Format the response as a JSON object with these keys:
-        - awareness: Array of informational and problem-awareness keywords
-        - interest: Array of research and comparison keywords
-        - desire: Array of product/solution specific keywords
-        - action: Array of purchase and conversion keywords
-        
-        Each array should contain exactly 50 keywords.`
-      }
-    ],
-    temperature: 0.7
-  });
+  const response = await fetch(
+    settings.activeApiType === 'openrouter' ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions',
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: settings.preferredModel,
+        messages: [
+          {
+            role: "system",
+            content: "You are a keyword research expert. Generate 50 highly relevant keywords for each AIDA stage based on the main keyword. Return only a JSON object with no additional text."
+          },
+          {
+            role: "user",
+            content: `Generate 50 keywords for each AIDA stage based on: "${keyword}".
+            
+            Format the response as a JSON object with these keys:
+            - awareness: Array of informational and problem-awareness keywords
+            - interest: Array of research and comparison keywords
+            - desire: Array of product/solution specific keywords
+            - action: Array of purchase and conversion keywords
+            
+            Each array should contain exactly 50 keywords.`
+          }
+        ]
+      })
+    }
+  );
 
-  const response = completion.choices[0]?.message?.content;
-  if (!response) {
-    throw new Error('Failed to generate keywords');
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    console.error('AI API Error:', errorData);
+    throw new Error(errorData?.error?.message || `API request failed (${response.status})`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error('No content in AI response');
   }
 
   try {
-    return JSON.parse(response);
+    return JSON.parse(content);
   } catch (error) {
     console.error('Error parsing AI response:', error);
     throw new Error('Failed to parse AI response');
@@ -165,11 +168,16 @@ export const generateBridge = async (
     throw new Error('Please enter both start and end keywords');
   }
 
-  const openai = getOpenAIClient();
   const settings = loadSettings();
+  const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+  
+  if (!apiKey) {
+    throw new Error(`${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key is not configured. Please add it in the settings.`);
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
   };
 
   if (settings.activeApiType === 'openrouter') {
@@ -177,36 +185,50 @@ export const generateBridge = async (
     headers['X-Title'] = 'ImVigour Content Bridge';
   }
 
-  const completion = await openai.chat.completions.create({
-    model: settings.preferredModel,
-    messages: [
-      {
-        role: "system",
-        content: "You are a content strategy expert. Create a detailed content bridge plan that shows how to naturally transition from one topic to another in a single piece of content. Return only a JSON object with no additional text."
-      },
-      {
-        role: "user",
-        content: `Create a content bridge plan from "${start}" to "${end}" that shows how to naturally transition between these topics in a single piece of content.
+  const response = await fetch(
+    settings.activeApiType === 'openrouter' ? 'https://openrouter.ai/api/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions',
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: settings.preferredModel,
+        messages: [
+          {
+            role: "system",
+            content: "You are a content strategy expert. Create a detailed content bridge plan that shows how to naturally transition from one topic to another in a single piece of content. Return only a JSON object with no additional text."
+          },
+          {
+            role: "user",
+            content: `Create a content bridge plan from "${start}" to "${end}" that shows how to naturally transition between these topics in a single piece of content.
 
-        Format the response as a JSON object with:
-        - path: Array of subtopics creating a logical flow
-        - transitions: Array of objects containing:
-          - from: starting subtopic
-          - to: ending subtopic
-          - connection: description of how these topics connect
-          - transitionText: suggested transition sentence`
-      }
-    ],
-    temperature: 0.7
-  });
+            Format the response as a JSON object with:
+            - path: Array of subtopics creating a logical flow
+            - transitions: Array of objects containing:
+              - from: starting subtopic
+              - to: ending subtopic
+              - connection: description of how these topics connect
+              - transitionText: suggested transition sentence`
+          }
+        ]
+      })
+    }
+  );
 
-  const response = completion.choices[0]?.message?.content;
-  if (!response) {
-    throw new Error('Failed to generate content bridge');
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    console.error('AI API Error:', errorData);
+    throw new Error(errorData?.error?.message || `API request failed (${response.status})`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error('No content in AI response');
   }
 
   try {
-    const bridgePlan = JSON.parse(response);
+    const bridgePlan = JSON.parse(content);
     return {
       path: bridgePlan.path,
       transitions: bridgePlan.transitions
