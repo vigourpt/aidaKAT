@@ -4,11 +4,11 @@ const STORAGE_KEY = 'imvigour_settings';
 
 const defaultSettings: Settings = {
   apiKeys: {
-    openai: '',
-    openRouter: '',
-    keywordsEverywhere: ''
+    openai: import.meta.env.VITE_OPENAI_API_KEY || '',
+    openRouter: import.meta.env.VITE_OPENROUTER_API_KEY || '',
+    keywordsEverywhere: import.meta.env.VITE_KEYWORDS_EVERYWHERE_API_KEY || ''
   },
-  preferredModel: 'anthropic/claude-3.5-opus',
+  preferredModel: 'anthropic/claude-3-sonnet',
   activeApiType: 'openrouter'
 };
 
@@ -16,7 +16,17 @@ export const loadSettings = (): Settings => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const settings = JSON.parse(stored);
+      // Use stored API keys if they exist, otherwise fall back to env variables
+      return {
+        ...defaultSettings,
+        ...settings,
+        apiKeys: {
+          openai: settings.apiKeys?.openai || defaultSettings.apiKeys.openai,
+          openRouter: settings.apiKeys?.openRouter || defaultSettings.apiKeys.openRouter,
+          keywordsEverywhere: settings.apiKeys?.keywordsEverywhere || defaultSettings.apiKeys.keywordsEverywhere
+        }
+      };
     }
   } catch (error) {
     console.error('Failed to load settings:', error);
@@ -45,8 +55,8 @@ export const migrateLegacySettings = (): void => {
         ...defaultSettings,
         apiKeys: {
           ...defaultSettings.apiKeys,
-          openai: oldKeys.openai || '',
-          keywordsEverywhere: oldKeys.keywordsEverywhere || ''
+          openai: oldKeys.openai || defaultSettings.apiKeys.openai,
+          keywordsEverywhere: oldKeys.keywordsEverywhere || defaultSettings.apiKeys.keywordsEverywhere
         }
       };
       saveSettings(newSettings);

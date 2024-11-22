@@ -25,10 +25,21 @@ export interface NicheAlternative {
   timeToFirstSale: string;
 }
 
+export interface KeywordMetrics {
+  keyword: string;
+  volume: number;
+  cpc: number;
+  competition: number;
+}
+
+export interface KeywordWithMetrics extends KeywordMetrics {
+  keyword: string;
+}
+
 export interface NicheData {
   position: string;
   suggestedFocus: string;
-  keywords: string[];
+  keywords: KeywordWithMetrics[];
   contentStrategy: string;
   analysis: string;
   trafficBackdoors: TrafficBackdoor[];

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { SettingsTab } from '../../src/components/SettingsTab';
 import { NicheAnalyzer } from './components/NicheAnalyzer';
 import Navigation from '../../src/components/Navigation';
-import type { NicheData } from './types';
+import type { NicheData, KeywordWithMetrics } from './types';
 import { loadSettings } from '../../src/utils/storage';
+import { batchProcessKeywords } from './utils/keywordMetrics';
 
 export default function App() {
   const [result, setResult] = useState<NicheData | null>(null);
@@ -11,7 +12,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const parseAIResponse = (content: string): NicheData => {
+  const parseAIResponse = (content: string): Omit<NicheData, 'keywords'> & { keywords: string[] } => {
     try {
       return JSON.parse(content);
     } catch (e) {
@@ -25,10 +26,16 @@ export default function App() {
 
   const analyzeNiche = async (niche: string) => {
     const settings = loadSettings();
-    const apiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+    const aiApiKey = settings.activeApiType === 'openai' ? settings.apiKeys.openai : settings.apiKeys.openRouter;
+    const keywordsApiKey = settings.apiKeys.keywordsEverywhere;
     
-    if (!apiKey) {
+    if (!aiApiKey) {
       setError(`Please set your ${settings.activeApiType === 'openai' ? 'OpenAI' : 'OpenRouter'} API key in settings first`);
+      return;
+    }
+
+    if (!keywordsApiKey) {
+      setError('Keywords Everywhere API key is not configured. Please add it in the settings.');
       return;
     }
 
@@ -36,12 +43,13 @@ export default function App() {
     setError(null);
 
     try {
+      // First, get the niche analysis from AI
       let response;
       if (settings.activeApiType === 'openai') {
         response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${aiApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -93,7 +101,7 @@ export default function App() {
         response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${aiApiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': window.location.href,
           },
@@ -150,7 +158,17 @@ export default function App() {
 
       const data = await response.json();
       const nicheData = parseAIResponse(data.choices[0].message.content);
-      setResult(nicheData);
+
+      // Then, get keyword metrics from Keywords Everywhere API
+      const keywordMetrics = await batchProcessKeywords(nicheData.keywords);
+
+      // Combine the AI analysis with keyword metrics
+      const finalResult: NicheData = {
+        ...nicheData,
+        keywords: keywordMetrics
+      };
+
+      setResult(finalResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

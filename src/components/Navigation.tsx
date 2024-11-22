@@ -40,7 +40,7 @@ const Navigation = ({ onOpenSettings }: NavigationProps) => {
 
         {/* Dropdown menu */}
         <div className={`${isMenuOpen ? 'block' : 'hidden'} bg-white rounded-lg shadow-lg mt-2`}>
-          <div className="px-2 py-3 space-y-1">
+          <div className="px-2 py-3 space-y-1 text-left">
             {links.map((link) => (
               <a
                 key={link.href}
