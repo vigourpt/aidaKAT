@@ -45,6 +45,45 @@ export default function App() {
     try {
       // First, get the niche analysis from AI
       let response;
+      const prompt = `Analyze this niche market: "${niche}". Focus on beginner-friendly opportunities with low competition. If the niche is too competitive, suggest 3 closely related but easier alternatives. Return ONLY a JSON object with this structure:
+{
+  "position": "Brief description of current market position",
+  "suggestedFocus": "Specific focus area recommendation for beginners",
+  "keywords": ["keyword1", "keyword2", ...],
+  "contentStrategy": "Content strategy overview focused on beginner-friendly approach",
+  "analysis": "Detailed market analysis with emphasis on entry barriers",
+  "trafficBackdoors": [
+    {
+      "channel": "Specific low-competition topic related to high-CPC main topic",
+      "strategy": "How to leverage this opportunity as a beginner",
+      "difficulty": "Easy",
+      "potentialTraffic": "Estimated monthly visitors"
+    }
+  ],
+  "tools": [
+    {
+      "name": "Tool name",
+      "description": "Tool description",
+      "type": "Calculator|Template|Checklist|Generator",
+      "complexity": "Simple",
+      "conversionPotential": "High|Medium|Low"
+    }
+  ],
+  "alternatives": [
+    {
+      "niche": "More specific sub-niche",
+      "difficulty": "Easy",
+      "competition": "Low competition level description",
+      "potential": "Revenue potential for beginners",
+      "rationale": "Why this is good for beginners",
+      "monthlyTraffic": "Estimated monthly visitors",
+      "profitPotential": "Estimated monthly profit range",
+      "startupCost": "Initial investment needed",
+      "timeToFirstSale": "Estimated time to first sale"
+    }
+  ]
+}`;
+
       if (settings.activeApiType === 'openai') {
         response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -56,44 +95,7 @@ export default function App() {
             model: settings.preferredModel,
             messages: [{
               role: 'user',
-              content: `Analyze this niche market: "${niche}". Focus on beginner-friendly opportunities with low competition. If the niche is too competitive, suggest 3 closely related but easier alternatives. Return ONLY a JSON object with this structure:
-{
-  "position": "Brief description of current market position",
-  "suggestedFocus": "Specific focus area recommendation for beginners",
-  "keywords": ["keyword1", "keyword2", ...],
-  "contentStrategy": "Content strategy overview focused on beginner-friendly approach",
-  "analysis": "Detailed market analysis with emphasis on entry barriers",
-  "trafficBackdoors": [
-    {
-      "channel": "Specific low-competition topic related to high-CPC main topic",
-      "strategy": "How to leverage this opportunity as a beginner",
-      "difficulty": "Easy",
-      "potentialTraffic": "Estimated monthly visitors"
-    }
-  ],
-  "tools": [
-    {
-      "name": "Tool name",
-      "description": "Tool description",
-      "type": "Calculator|Template|Checklist|Generator",
-      "complexity": "Simple",
-      "conversionPotential": "High|Medium|Low"
-    }
-  ],
-  "alternatives": [
-    {
-      "niche": "More specific sub-niche",
-      "difficulty": "Easy",
-      "competition": "Low competition level description",
-      "potential": "Revenue potential for beginners",
-      "rationale": "Why this is good for beginners",
-      "monthlyTraffic": "Estimated monthly visitors",
-      "profitPotential": "Estimated monthly profit range",
-      "startupCost": "Initial investment needed",
-      "timeToFirstSale": "Estimated time to first sale"
-    }
-  ]
-}`
+              content: prompt
             }]
           })
         });
@@ -104,60 +106,39 @@ export default function App() {
             'Authorization': `Bearer ${aiApiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': window.location.href,
+            'X-Title': 'ImVigour Niche Analyzer',
           },
           body: JSON.stringify({
             model: settings.preferredModel,
             messages: [{
               role: 'user',
-              content: `Analyze this niche market: "${niche}". Focus on beginner-friendly opportunities with low competition. If the niche is too competitive, suggest 3 closely related but easier alternatives. Return ONLY a JSON object with this structure:
-{
-  "position": "Brief description of current market position",
-  "suggestedFocus": "Specific focus area recommendation for beginners",
-  "keywords": ["keyword1", "keyword2", ...],
-  "contentStrategy": "Content strategy overview focused on beginner-friendly approach",
-  "analysis": "Detailed market analysis with emphasis on entry barriers",
-  "trafficBackdoors": [
-    {
-      "channel": "Specific low-competition topic related to high-CPC main topic",
-      "strategy": "How to leverage this opportunity as a beginner",
-      "difficulty": "Easy",
-      "potentialTraffic": "Estimated monthly visitors"
-    }
-  ],
-  "tools": [
-    {
-      "name": "Tool name",
-      "description": "Tool description",
-      "type": "Calculator|Template|Checklist|Generator",
-      "complexity": "Simple",
-      "conversionPotential": "High|Medium|Low"
-    }
-  ],
-  "alternatives": [
-    {
-      "niche": "More specific sub-niche",
-      "difficulty": "Easy",
-      "competition": "Low competition level description",
-      "potential": "Revenue potential for beginners",
-      "rationale": "Why this is good for beginners",
-      "monthlyTraffic": "Estimated monthly visitors",
-      "profitPotential": "Estimated monthly profit range",
-      "startupCost": "Initial investment needed",
-      "timeToFirstSale": "Estimated time to first sale"
-    }
-  ]
-}`
+              content: prompt
             }]
           })
         });
       }
 
       if (!response.ok) {
-        throw new Error('Failed to analyze niche');
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to analyze niche');
       }
 
       const data = await response.json();
-      const nicheData = parseAIResponse(data.choices[0].message.content);
+      console.log('AI Response:', data); // Debug log
+
+      // Handle different response formats
+      let content;
+      if (settings.activeApiType === 'openai') {
+        content = data.choices[0].message.content;
+      } else {
+        content = data.choices[0].message.content;
+      }
+
+      if (!content) {
+        throw new Error('No content in AI response');
+      }
+
+      const nicheData = parseAIResponse(content);
 
       // Then, get keyword metrics from Keywords Everywhere API
       const keywordMetrics = await batchProcessKeywords(nicheData.keywords);
@@ -170,6 +151,7 @@ export default function App() {
 
       setResult(finalResult);
     } catch (err) {
+      console.error('Error in analyzeNiche:', err); // Debug log
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
