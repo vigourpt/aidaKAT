@@ -132,11 +132,13 @@ export function SettingsTab({ isOpen, onClose, onSettingsChange }: SettingsTabPr
             >
               {settings.activeApiType === 'openai' ? (
                 <>
-                  <option value="gpt-4-0125-preview">GPT-4 Turbo</option>
+                  <option value="gpt-4o">GPT-4 Turbo</option>
                   <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-4-1106-preview">GPT-4o</option>
                 </>
               ) : (
                 <>
+                  <option value="openai/gpt-4o">GPT-4o - OpenAI</option>
                   <option value="openai/gpt-4-0125-preview">GPT-4 Turbo - OpenAI</option>
                   <option value="openai/gpt-4">GPT-4 - OpenAI</option>
                   <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet - Anthropic</option>
