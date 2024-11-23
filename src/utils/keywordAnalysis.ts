@@ -80,11 +80,15 @@ async function makeAIRequest(prompt: string): Promise<string> {
 
   const requestBody = {
     messages: [{
+      role: 'system',
+      content: 'You are a keyword research expert. Return only valid JSON with no additional text or formatting.'
+    }, {
       role: 'user',
       content: prompt
     }],
     temperature: 0.7,
-    max_tokens: 2000
+    max_tokens: 2000,
+    response_format: { type: "json_object" }
   };
 
   if (settings.activeApiType === 'openrouter') {
@@ -111,6 +115,7 @@ async function makeAIRequest(prompt: string): Promise<string> {
   }
 
   const data = await response.json();
+  console.log('AI Response:', data); // Debug log
   const content = data.choices?.[0]?.message?.content;
 
   if (!content) {
@@ -118,6 +123,33 @@ async function makeAIRequest(prompt: string): Promise<string> {
   }
 
   return content;
+}
+
+function parseAIResponse<T>(content: string, expectedKeys: string[]): T {
+  try {
+    // Try to find a JSON object in the response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON object found in response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    // Validate the response has all required keys
+    for (const key of expectedKeys) {
+      if (!parsed[key]) {
+        throw new Error(`Missing required key: ${key}`);
+      }
+      if (Array.isArray(parsed[key]) && parsed[key].length === 0) {
+        throw new Error(`Empty array for key: ${key}`);
+      }
+    }
+
+    return parsed as T;
+  } catch (error) {
+    console.error('Error parsing AI response:', error, 'Content:', content);
+    throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 export const analyzeKeyword = async (keyword: string): Promise<AidaStageResults> => {
@@ -128,23 +160,16 @@ export const analyzeKeyword = async (keyword: string): Promise<AidaStageResults>
   // Generate keywords for each AIDA stage
   const prompt = `Generate 50 keywords for each AIDA stage based on: "${keyword}".
   
-  Format the response as a JSON object with these keys:
-  - awareness: Array of informational and problem-awareness keywords
-  - interest: Array of research and comparison keywords
-  - desire: Array of product/solution specific keywords
-  - action: Array of purchase and conversion keywords
-  
-  Each array should contain exactly 50 keywords.`;
+  Return a JSON object with these arrays (each containing exactly 50 keywords):
+  {
+    "awareness": ["keyword1", "keyword2", ...],
+    "interest": ["keyword1", "keyword2", ...],
+    "desire": ["keyword1", "keyword2", ...],
+    "action": ["keyword1", "keyword2", ...]
+  }`;
 
   const content = await makeAIRequest(prompt);
-
-  let aidaKeywords: AidaKeywords;
-  try {
-    aidaKeywords = JSON.parse(content) as AidaKeywords;
-  } catch (error) {
-    console.error('Error parsing AI response:', error);
-    throw new Error('Failed to parse AI response');
-  }
+  const aidaKeywords = parseAIResponse<AidaKeywords>(content, ['awareness', 'interest', 'desire', 'action']);
   
   // Get metrics for all keywords in batches
   const allKeywords = Object.values(aidaKeywords).flat();
@@ -182,24 +207,19 @@ export const generateBridge = async (
 
   const prompt = `Create a content bridge plan from "${start}" to "${end}" that shows how to naturally transition between these topics in a single piece of content.
 
-  Format the response as a JSON object with:
-  - path: Array of subtopics creating a logical flow
-  - transitions: Array of objects containing:
-    - from: starting subtopic
-    - to: ending subtopic
-    - connection: description of how these topics connect
-    - transitionText: suggested transition sentence`;
+  Return a JSON object with this structure:
+  {
+    "path": ["subtopic1", "subtopic2", ...],
+    "transitions": [
+      {
+        "from": "starting subtopic",
+        "to": "ending subtopic",
+        "connection": "description of how these topics connect",
+        "transitionText": "suggested transition sentence"
+      }
+    ]
+  }`;
 
   const content = await makeAIRequest(prompt);
-
-  try {
-    const bridgePlan = JSON.parse(content);
-    return {
-      path: bridgePlan.path,
-      transitions: bridgePlan.transitions
-    };
-  } catch (error) {
-    console.error('Error parsing AI response:', error);
-    throw new Error('Failed to parse AI response');
-  }
+  return parseAIResponse<BridgeResult>(content, ['path', 'transitions']);
 };
